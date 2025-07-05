@@ -5,6 +5,7 @@ from typing import Dict, Any, Optional
 import json
 import logging
 import os
+import uuid
 
 class TerminationReason(Enum):
     MAX_ITERATIONS = auto()
@@ -26,6 +27,12 @@ class TerminationEvent:
     timestamp: datetime
     performance_metrics: Dict[str, Any]
     additional_context: Optional[Dict[str, Any]] = None
+    event_id: str = None
+
+    def __post_init__(self):
+        """Generate a unique event ID if not provided."""
+        if self.event_id is None:
+            self.event_id = str(uuid.uuid4())
 
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -35,6 +42,7 @@ class TerminationEvent:
             Dict containing event details
         """
         return {
+            "event_id": self.event_id,
             "reason": self.reason.name,
             "iteration_count": self.iteration_count,
             "timestamp": self.timestamp.isoformat(),
@@ -91,7 +99,7 @@ class TerminationLogger:
         iteration_count: int, 
         performance_metrics: Dict[str, Any], 
         additional_context: Optional[Dict[str, Any]] = None
-    ) -> None:
+    ) -> str:
         """
         Log a complete termination event.
         
@@ -100,6 +108,9 @@ class TerminationLogger:
             iteration_count: Number of iterations completed
             performance_metrics: Metrics captured during loop execution
             additional_context: Optional extra contextual information
+        
+        Returns:
+            str: Path to the generated JSON log file
         """
         event = TerminationEvent(
             reason=reason,
@@ -109,8 +120,11 @@ class TerminationLogger:
             additional_context=additional_context
         )
         
-        # Log JSON representation
-        json_log_path = os.path.join(self.log_dir, f"termination_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
+        # Generate unique JSON log filename
+        json_filename = f"termination_{event.event_id}.json"
+        json_log_path = os.path.join(self.log_dir, json_filename)
+        
+        # Write JSON log
         with open(json_log_path, 'w') as f:
             json.dump(event.to_dict(), f, indent=2)
         
@@ -122,3 +136,5 @@ class TerminationLogger:
             f"Metrics={performance_metrics}"
         )
         self.logger.info(log_message)
+        
+        return json_log_path
