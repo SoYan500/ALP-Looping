@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import Optional, List, Dict, Any, Union
-from pydantic import BaseModel, Field, validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 
 class LearningAlgorithm(str, Enum):
@@ -89,7 +89,8 @@ class AdaptiveLearningProcessConfig(BaseModel):
         description="Additional custom parameters"
     )
 
-    @validator('custom_parameters', always=True)
+    @field_validator('custom_parameters', mode='before')
+    @classmethod
     def validate_custom_parameters(cls, v):
         """Validate custom parameters."""
         if v is not None and not isinstance(v, dict):
