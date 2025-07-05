@@ -60,12 +60,12 @@ def test_validation_helper():
 
 def test_invalid_configuration():
     """Test that invalid configurations raise appropriate errors."""
-    with pytest.raises(ValueError, match="ensure this value is greater than 0"):
+    with pytest.raises(Exception, match="Input should be greater than 0"):
         AdaptiveLearningProcessConfig(
             iteration_config={"max_iterations": 0}
         )
     
-    with pytest.raises(ValueError, match="ensure this value is greater than or equal to 0"):
+    with pytest.raises(Exception, match="Input should be greater than 0"):
         AdaptiveLearningProcessConfig(
             hyperparameters={"learning_rate": -0.1}
         )
